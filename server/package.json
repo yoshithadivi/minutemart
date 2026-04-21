@@ -1,10 +1,10 @@
 {
   "name": "minutemart-server",
   "version": "1.0.0",
-  "main": "server.ts",
+  "main": "app.ts",
   "scripts": {
-    "dev": "nodemon server.ts",
-    "start": "ts-node server.ts",
+    "dev": "nodemon app.ts",
+    "start": "node dist/app.js",
     "seed": "ts-node seed.ts"
   },
   "dependencies": {
@@ -13,7 +13,8 @@
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.3.4"
+    "mongoose": "^8.3.4",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

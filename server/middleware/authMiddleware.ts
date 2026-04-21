@@ -1,27 +1,46 @@
-import jwt from 'jsonwebtoken';
-import { Request, Response, NextFunction } from 'express';
-import { User } from '../models/User';
+import { Response, NextFunction } from "express";
+import jwt from "jsonwebtoken";
 
-export interface AuthRequest extends Request {
-  user?: any;
-}
+import { User } from "../models/User";
+import { AuthRequest } from "../types/express.types";
 
-export const protect = async (req: AuthRequest, res: Response, next: NextFunction) => {
-  let token;
-  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-    try {
-      token = req.headers.authorization.split(' ')[1];
-      const decoded: any = jwt.verify(token, process.env.JWT_SECRET || '');
-      req.user = await User.findById(decoded.id).select('-password');
-      next();
-    } catch (error) {
-      res.status(401);
-      next(new Error('Not authorized, token failed'));
+export const protect = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader?.startsWith("Bearer ")) {
+      return res.status(401).json({
+        message: "Not authorized, no token"
+      });
     }
-  }
 
-  if (!token) {
-    res.status(401);
-    next(new Error('Not authorized, no token'));
+    const token = authHeader.split(" ")[1];
+
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET as string
+    ) as { id: string };
+
+    const user = await User.findById(
+      decoded.id
+    ).select("-password");
+
+    if (!user) {
+      return res.status(401).json({
+        message: "User not found"
+      });
+    }
+
+    req.user = user;
+
+    next();
+  } catch (error) {
+    return res.status(401).json({
+      message: "Not authorized, token failed"
+    });
   }
 };
