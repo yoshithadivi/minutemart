@@ -1,43 +1,58 @@
-import { Request, Response } from 'express';
-import { User, IUser } from "../models/User";
-import { generateToken } from '../utils/generateToken';
+import { Request, Response } from "express";
 
-export const registerUser = async (req: Request, res: Response) => {
+import {
+  registerSchema,
+  loginSchema
+} from "../validators/authValidator";
+
+import {
+  registerUserService,
+  loginUserService
+} from "../services/authService";
+
+import { AuthRequest } from "../types/express.types";
+
+export const registerUser = async (
+  req: Request,
+  res: Response
+) => {
   try {
-    const { name, email, password } = req.body;
-    const userExists = await User.findOne({ email });
-    if (userExists) {
-      return res.status(400).json({ message: 'User already exists' });
-    }
-    const user = await User.create({ name, email, password });
-    if (user) {
-      res.status(201).json({
-        _id: user._id, name: user.name, email: user.email, token: generateToken(user._id.toString())
-      });
-    } else {
-      res.status(400).json({ message: 'Invalid user data' });
-    }
+    const validatedData = registerSchema.parse(req.body);
+
+    const data = await registerUserService(
+      validatedData
+    );
+
+    return res.status(201).json(data);
   } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    return res.status(400).json({
+      message: error.message
+    });
   }
 };
 
-export const loginUser = async (req: Request, res: Response) => {
+export const loginUser = async (
+  req: Request,
+  res: Response
+) => {
   try {
-    const { email, password } = req.body;
-    const user = await User.findOne({ email });
-    if (user && (await user.matchPassword(password))) {
-      res.json({
-        _id: user._id, name: user.name, email: user.email, token: generateToken(user._id.toString())
-      });
-    } else {
-      res.status(401).json({ message: 'Invalid email or password' });
-    }
+    const validatedData = loginSchema.parse(req.body);
+
+    const data = await loginUserService(
+      validatedData
+    );
+
+    return res.status(200).json(data);
   } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    return res.status(401).json({
+      message: error.message
+    });
   }
 };
 
-export const getMe = async (req: any, res: Response) => {
-  res.json(req.user);
+export const getMe = async (
+  req: AuthRequest,
+  res: Response
+) => {
+  return res.status(200).json(req.user);
 };

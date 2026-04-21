@@ -1,5 +1,12 @@
-import mongoose from "mongoose";
+import mongoose, { Model } from "mongoose";
 import bcrypt from "bcryptjs";
+
+import {
+  IUser,
+  IUserMethods
+} from "../types/user.types";
+
+type UserModel = Model<IUser, {}, IUserMethods>;
 
 const addressSchema = new mongoose.Schema(
   {
@@ -104,7 +111,11 @@ const cartItemSchema = new mongoose.Schema(
   { _id: true }
 );
 
-const userSchema = new mongoose.Schema(
+const userSchema = new mongoose.Schema<
+  IUser,
+  UserModel,
+  IUserMethods
+>(
   {
     name: {
       type: String,
@@ -137,9 +148,15 @@ const userSchema = new mongoose.Schema(
       default: "customer"
     },
 
-    addresses: [addressSchema],
+    addresses: {
+      type: [addressSchema],
+      default: []
+    },
 
-    cart: [cartItemSchema],
+    cart: {
+      type: [cartItemSchema],
+      default: []
+    },
 
     isActive: {
       type: Boolean,
@@ -154,18 +171,28 @@ const userSchema = new mongoose.Schema(
 );
 
 userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
+  if (!this.isModified("password")) {
+    return next();
+  }
 
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
+
+  next();
 });
 
 userSchema.methods.matchPassword = async function (
   enteredPassword: string
 ): Promise<boolean> {
-  return bcrypt.compare(enteredPassword, this.password);
+  return bcrypt.compare(
+    enteredPassword,
+    this.password
+  );
 };
 
 userSchema.index({ email: 1 });
 
-export const User = mongoose.model("User", userSchema);
+export const User = mongoose.model<
+  IUser,
+  UserModel
+>("User", userSchema);
