@@ -43,7 +43,7 @@ export default function Navbar() {
             </div>
 
             <div className="flex items-center gap-4">
-              <Link to="/login" className="hidden sm:flex items-center gap-2 text-gray-700 hover:text-brand-600 font-bold px-4 py-2 rounded-xl hover:bg-brand-50 transition-colors">
+              <Link to="/auth" className="hidden sm:flex items-center gap-2 text-gray-700 hover:text-brand-600 font-bold px-4 py-2 rounded-xl hover:bg-brand-50 transition-colors">
                 <User className="w-5 h-5" />
                 <span>Login</span>
               </Link>
